@@ -12,9 +12,7 @@ namespace watcher
             public string a;
             public string b;
         }
-        private FileSystemWatcher _watcher = null;
-        private Thread _thread;
-        private BlockingCollection<Message> _messageQueue;
+
         public Worker(string path)
         {
             _messageQueue = new BlockingCollection<Message>();
@@ -22,10 +20,8 @@ namespace watcher
             _thread.Start();
         }
 
-        public void Join()
-        {
-            _thread.Join();
-        }
+        public void SendMessage(Message msg) => _messageQueue.Add(msg);
+        public void Join() => _thread.Join();
 
         private void Run()
         {
@@ -37,9 +33,8 @@ namespace watcher
             }
         }
 
-        public void SendMessage(Message msg)
-        {
-            _messageQueue.Add(msg);
-        }
+        private Thread _thread;
+        private BlockingCollection<Message> _messageQueue;
+        private FileSystemWatcher _watcher = null;
     }
 }
