@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <Extern href="stdidcmd.h"/>
+  <Extern href="vsshlids.h"/>
+
+  <Commands package="guidOpenFileFromDirPackage">
+    <Groups>
+      <Group guid="guidOpenFileFromDirPackageCmdSet" id="MyMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS"/>
+      </Group>
+    </Groups>
+
+    <Buttons>
+      <Button guid="guidOpenFileFromDirPackageCmdSet" id="DoOpenFileId" priority="0x0100" type="Button">
+        <Parent guid="guidOpenFileFromDirPackageCmdSet" id="MyMenuGroup" />
+        <Strings>
+          <ButtonText>Open File From Directory</ButtonText>
+          <CommandName>OpenFileFromDirectory</CommandName>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <Symbols>
+    <GuidSymbol name="guidOpenFileFromDirPackage" value="{d9ceffa2-afa0-4207-8711-d43d74ad1ad8}" />
+    <GuidSymbol name="guidOpenFileFromDirPackageCmdSet" value="{1a8aa90c-6004-47f6-9c1c-c4af614721a6}">
+      <IDSymbol name="MyMenuGroup" value="0x1020" />
+      <IDSymbol name="DoOpenFileId" value="0x0100" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>
