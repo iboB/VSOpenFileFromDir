@@ -6,20 +6,31 @@ namespace watcher
     {
         static void Main(string[] args)
         {
-            var w = new Worker("/home/ibob/temp");
-
-            while (true)
+            try
             {
-                Worker.Message msg;
-                msg.a = Console.ReadLine();
-                msg.b = Console.ReadLine();
+                var w = new Worker("/home/ibob/temp");
 
-                w.SendMessage(msg);
+                while (true)
+                {
+                    var cmd = Console.ReadLine();
+                    if (cmd == "q")
+                    {
+                        break;
+                    }
+                    else if (cmd == "l")
+                    {
+                        var files = w.GetFiles();
+                        Console.WriteLine(string.Join('\n', files));
+                        Console.WriteLine();
+                    }
+                }
 
-                if (msg.a == "q") break;
+                w.Join();
             }
-
-            w.Join();
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception: {e}");
+            }
         }
     }
 }
