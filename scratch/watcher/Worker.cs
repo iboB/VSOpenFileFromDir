@@ -67,15 +67,15 @@ namespace watcher
             _messageQueue = new BlockingCollection<Msg>();
             _allFiles = new List<string>();
 
-            // star the watcher before we start the thread and collect file infos
+            // start the watcher before we start the thread and collect file infos
             // thus if any events happen while we're building the list, we'll have
             // the opportunity to reflect them
             _watcher = new FileSystemWatcher();
             _watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
             _watcher.Path = _rootPath;
-            _watcher.Created += (object source, FileSystemEventArgs e) => SendMessage(Msg.Created(e.FullPath));
-            _watcher.Deleted += (object source, FileSystemEventArgs e) => SendMessage(Msg.Deleted(e.FullPath));
-            _watcher.Renamed += (object source, RenamedEventArgs e) => SendMessage(Msg.Renamed(e.OldFullPath, e.FullPath));
+            _watcher.Created += (object src, FileSystemEventArgs e) => SendMessage(Msg.Created(e.FullPath));
+            _watcher.Deleted += (object src, FileSystemEventArgs e) => SendMessage(Msg.Deleted(e.FullPath));
+            _watcher.Renamed += (object src, RenamedEventArgs e) => SendMessage(Msg.Renamed(e.OldFullPath, e.FullPath));
             _watcher.IncludeSubdirectories = true;
             _watcher.EnableRaisingEvents = true;
 
@@ -93,14 +93,18 @@ namespace watcher
             _thread = null;
         }
 
+        private HashSet<string> defaultFilters = new HashSet<string>{".git", ".svn"};
         private bool DirPassesFilter(string dir)
         {
-            return true;
+            var elements = new HashSet<string>(dir.Substring(_rootPath.Length).Split(Path.DirectorySeparatorChar));
+
+            return !elements.Overlaps(defaultFilters);
         }
 
         private bool FilePassesFilter(string file)
         {
-            return true;
+            var dir = Path.GetDirectoryName(file);
+            return DirPassesFilter(dir);
         }
 
         private List<string> _allFiles;
