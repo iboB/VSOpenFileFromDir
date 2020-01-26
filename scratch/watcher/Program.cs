@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace watcher
 {
@@ -19,7 +20,8 @@ namespace watcher
                     }
                     else if (cmd == "l")
                     {
-                        var files = w.GetFiles();
+                        string[] files = null;
+                        w.ProcessFiles((List<string> wfiles) => files = wfiles.ToArray());
                         Console.WriteLine(string.Join('\n', files));
                         Console.WriteLine();
                     }

@@ -141,6 +141,14 @@ namespace watcher
             }
         }
 
+        public void ProcessFiles(Action<List<string>> processor)
+        {
+            lock (_allFiles)
+            {
+                processor(_allFiles);
+            }
+        }
+
         void BuildTree(string path)
         {
             try
