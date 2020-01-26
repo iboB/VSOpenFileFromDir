@@ -10,7 +10,68 @@ namespace watcher
     using DirFilters = HashSet<string>;
     class Worker
     {
-        public struct Msg
+        public Worker(string path)
+        {
+            if (!Directory.Exists(path)) throw new DirectoryNotFoundException(path);
+            _rootPath = path;
+            _messageQueue = new BlockingCollection<Msg>();
+            _allFiles = new List<string>();
+
+            // start the watchers before we start the thread and collect file infos
+            // thus if any events happen while we're building the list, we'll have
+            // the opportunity to reflect them
+            _watcher = new FileSystemWatcher();
+            _watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            _watcher.Path = _rootPath;
+            _watcher.Created += (object src, FileSystemEventArgs e) => SendMessage(Msg.Created(e.FullPath));
+            _watcher.Deleted += (object src, FileSystemEventArgs e) => SendMessage(Msg.Deleted(e.FullPath));
+            _watcher.Renamed += (object src, RenamedEventArgs e) => SendMessage(Msg.Renamed(e.OldFullPath, e.FullPath));
+            _watcher.IncludeSubdirectories = true;
+            _watcher.EnableRaisingEvents = true;
+
+            _filtersWatcher = new FileSystemWatcher();
+            _filtersWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+            _filtersWatcher.Path = _rootPath;
+            _filtersWatcher.Filter = FiltersFilename;
+            _filtersWatcher.Created += (object src, FileSystemEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.Deleted += (object src, FileSystemEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.Changed += (object src, FileSystemEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.Renamed += (object src, RenamedEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.EnableRaisingEvents = true;
+
+            _thread = new Thread(new ThreadStart(this.Run));
+            _thread.Start();
+        }
+
+        public string[] GetFiles()
+        {
+            lock (_allFiles)
+            {
+                return _allFiles.ToArray();
+            }
+        }
+
+        public void ProcessFiles(Action<List<string>> processor)
+        {
+            lock (_allFiles)
+            {
+                processor(_allFiles);
+            }
+        }
+
+        // you must call this to join the worker's threads
+        public void Join()
+        {
+            _watcher.EnableRaisingEvents = false;
+            _watcher = null;
+            _filtersWatcher.EnableRaisingEvents = false;
+            _filtersWatcher = null;
+            SendMessage(Msg.Quit());
+            _thread.Join();
+            _thread = null;
+        }
+
+        private struct Msg
         {
             public enum Type
             {
@@ -69,53 +130,8 @@ namespace watcher
                 return msg;
             }
         }
+        private void SendMessage(Msg msg) => _messageQueue.Add(msg);
 
-        readonly private string _rootPath;
-
-        public Worker(string path)
-        {
-            if (!Directory.Exists(path)) throw new DirectoryNotFoundException(path);
-            _rootPath = path;
-            _messageQueue = new BlockingCollection<Msg>();
-            _allFiles = new List<string>();
-
-            // start the watchers before we start the thread and collect file infos
-            // thus if any events happen while we're building the list, we'll have
-            // the opportunity to reflect them
-            _watcher = new FileSystemWatcher();
-            _watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            _watcher.Path = _rootPath;
-            _watcher.Created += (object src, FileSystemEventArgs e) => SendMessage(Msg.Created(e.FullPath));
-            _watcher.Deleted += (object src, FileSystemEventArgs e) => SendMessage(Msg.Deleted(e.FullPath));
-            _watcher.Renamed += (object src, RenamedEventArgs e) => SendMessage(Msg.Renamed(e.OldFullPath, e.FullPath));
-            _watcher.IncludeSubdirectories = true;
-            _watcher.EnableRaisingEvents = true;
-
-            _filtersWatcher = new FileSystemWatcher();
-            _filtersWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
-            _filtersWatcher.Path = _rootPath;
-            _filtersWatcher.Filter = FiltersFilename;
-            _filtersWatcher.Created += (object src, FileSystemEventArgs e) => OnFiltersChanged();
-            _filtersWatcher.Deleted += (object src, FileSystemEventArgs e) => OnFiltersChanged();
-            _filtersWatcher.Changed += (object src, FileSystemEventArgs e) => OnFiltersChanged();
-            _filtersWatcher.Renamed += (object src, RenamedEventArgs e) => OnFiltersChanged();
-            _filtersWatcher.EnableRaisingEvents = true;
-
-            _thread = new Thread(new ThreadStart(this.Run));
-            _thread.Start();
-        }
-
-        public void SendMessage(Msg msg) => _messageQueue.Add(msg);
-        public void Join()
-        {
-            _watcher.EnableRaisingEvents = false;
-            _watcher = null;
-            SendMessage(Msg.Quit());
-            _thread.Join();
-            _thread = null;
-        }
-
-        private DirFilters _dirFilters = null;
         private bool DirPassesFilter(string dir)
         {
             if (_dirFilters == null) return true;
@@ -129,24 +145,6 @@ namespace watcher
         {
             var dir = Path.GetDirectoryName(file);
             return DirPassesFilter(dir);
-        }
-
-        private List<string> _allFiles;
-
-        public string[] GetFiles()
-        {
-            lock (_allFiles)
-            {
-                return _allFiles.ToArray();
-            }
-        }
-
-        public void ProcessFiles(Action<List<string>> processor)
-        {
-            lock (_allFiles)
-            {
-                processor(_allFiles);
-            }
         }
 
         void BuildTree(string path)
@@ -190,8 +188,6 @@ namespace watcher
             _allFiles.Clear();
             BuildTree(_rootPath);
         }
-
-        private const string FiltersFilename = "VSOpenFileFromDirFilters.json";
 
         void ReadFilters(out DirFilters dirFilters)
         {
@@ -442,7 +438,11 @@ namespace watcher
             }
         }
 
+        private const string FiltersFilename = "VSOpenFileFromDirFilters.json";
+        readonly private string _rootPath;
+        private DirFilters _dirFilters = null;
         private Thread _thread;
+        private List<string> _allFiles;
         private BlockingCollection<Msg> _messageQueue;
         private FileSystemWatcher _watcher;
         private FileSystemWatcher _filtersWatcher;
