@@ -3,9 +3,11 @@ using System.IO;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace watcher
 {
+    using DirFilters = HashSet<string>;
     class Worker
     {
         public struct Msg
@@ -15,6 +17,7 @@ namespace watcher
                 Created,
                 Deleted,
                 Renamed,
+                FiltersChanged,
                 Quit,
             }
             public Type type;
@@ -48,6 +51,15 @@ namespace watcher
                 return msg;
             }
 
+            public static Msg FiltersChanged()
+            {
+                Msg msg;
+                msg.type = Type.FiltersChanged;
+                msg.path = null;
+                msg.oldPath = null;
+                return msg;
+            }
+
             public static Msg Quit()
             {
                 Msg msg;
@@ -67,7 +79,7 @@ namespace watcher
             _messageQueue = new BlockingCollection<Msg>();
             _allFiles = new List<string>();
 
-            // start the watcher before we start the thread and collect file infos
+            // start the watchers before we start the thread and collect file infos
             // thus if any events happen while we're building the list, we'll have
             // the opportunity to reflect them
             _watcher = new FileSystemWatcher();
@@ -78,6 +90,16 @@ namespace watcher
             _watcher.Renamed += (object src, RenamedEventArgs e) => SendMessage(Msg.Renamed(e.OldFullPath, e.FullPath));
             _watcher.IncludeSubdirectories = true;
             _watcher.EnableRaisingEvents = true;
+
+            _filtersWatcher = new FileSystemWatcher();
+            _filtersWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+            _filtersWatcher.Path = _rootPath;
+            _filtersWatcher.Filter = FiltersFilename;
+            _filtersWatcher.Created += (object src, FileSystemEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.Deleted += (object src, FileSystemEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.Changed += (object src, FileSystemEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.Renamed += (object src, RenamedEventArgs e) => OnFiltersChanged();
+            _filtersWatcher.EnableRaisingEvents = true;
 
             _thread = new Thread(new ThreadStart(this.Run));
             _thread.Start();
@@ -93,12 +115,14 @@ namespace watcher
             _thread = null;
         }
 
-        private HashSet<string> defaultFilters = new HashSet<string>{".git", ".svn"};
+        private DirFilters _dirFilters = null;
         private bool DirPassesFilter(string dir)
         {
+            if (_dirFilters == null) return true;
+
             var elements = new HashSet<string>(dir.Substring(_rootPath.Length).Split(Path.DirectorySeparatorChar));
 
-            return !elements.Overlaps(defaultFilters);
+            return !elements.Overlaps(_dirFilters);
         }
 
         private bool FilePassesFilter(string file)
@@ -159,8 +183,72 @@ namespace watcher
             BuildTree(_rootPath);
         }
 
+        private const string FiltersFilename = "VSOpenFileFromDirFilters.json";
+
+        void ReadFilters(out DirFilters dirFilters)
+        {
+            dirFilters = null;
+            try
+            {
+                var fname = Path.Join(_rootPath, FiltersFilename);
+                if (!File.Exists(fname)) return;
+
+                var text = File.ReadAllText(fname);
+                using (var json = JsonDocument.Parse(text))
+                {
+                    var root = json.RootElement;
+                    JsonElement dirs;
+                    if (root.TryGetProperty("dirs", out dirs))
+                    {
+                        var edirs = dirs.EnumerateArray();
+                        dirFilters = new DirFilters();
+                        foreach (var d in edirs)
+                        {
+                            dirFilters.Add(d.GetString());
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        void OnFiltersChanged()
+        {
+            DirFilters newDirFilters;
+            ReadFilters(out newDirFilters);
+
+            bool haveNewFilters = false;
+            if (newDirFilters == null)
+            {
+                haveNewFilters = _dirFilters != null;
+            }
+            else
+            {
+                if (_dirFilters != null)
+                {
+                    haveNewFilters = !_dirFilters.SetEquals(newDirFilters);
+                }
+                else
+                {
+                    haveNewFilters = true;
+                }
+            }
+
+            if (haveNewFilters)
+            {
+                // so, there is probably a way to update the existing list based on the old and new
+                // filters, but it's just too much work with too many potential bugs
+                // we rely that this happens relatively rarely, so we just rebuild the entire tree
+                _dirFilters = newDirFilters;
+                BuildFullTree();
+            }
+        }
+
         private void Run()
         {
+            ReadFilters(out _dirFilters);
             BuildFullTree();
 
             while (true)
@@ -177,6 +265,9 @@ namespace watcher
                         break;
                     case Msg.Type.Renamed:
                         OnRenamed(msg.oldPath, msg.path);
+                        break;
+                    case Msg.Type.FiltersChanged:
+                        OnFiltersChanged();
                         break;
                 }
             }
@@ -345,6 +436,7 @@ namespace watcher
 
         private Thread _thread;
         private BlockingCollection<Msg> _messageQueue;
-        private FileSystemWatcher _watcher = null;
+        private FileSystemWatcher _watcher;
+        private FileSystemWatcher _filtersWatcher;
     }
 }
