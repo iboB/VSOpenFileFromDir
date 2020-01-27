@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 
-namespace watcher
+namespace OpenFileFromDir
 {
     class Program
     {
@@ -10,9 +10,9 @@ namespace watcher
         {
             try
             {
-                var root = @"C:\temp";
-                string[] recent = { @"C:\temp\test\unit\vector2.cpp", @"C:\temp\test\unit\vector3.cpp", @"C:\temp\test\unit\quaternion.cpp" };
-                var w = new Worker(root);
+                var root = @"/home/ibob/prj/yama";
+                string[] recent = { @"/home/ibob/prj/yama/test/unit/vector2.cpp", @"/home/ibob/prj/yama/test/unit/vector3.cpp", @"/home/ibob/prj/yama/test/unit/quaternion.cpp" };
+                var w = new FileListWorker(root);
                 FilteredListProvider f = null;
 
                 while (true)
