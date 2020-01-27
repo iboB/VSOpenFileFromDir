@@ -136,6 +136,11 @@ namespace OpenFileFromDir
 
             ret.Sort((a, b) => a.sortWeight - b.sortWeight);
 
+            if (ret.Count > 100)
+            {
+                ret = ret.GetRange(0, 100);
+            }
+
             return ret;
         }
 
