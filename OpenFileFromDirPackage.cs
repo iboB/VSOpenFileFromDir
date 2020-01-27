@@ -27,6 +27,13 @@ namespace OpenFileFromDir
         private IVsSolution _solution = null;
         private uint _solutionEventsToken = uint.MaxValue;
 
+        public async void DoOpenFile(string path)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var ide = Package.GetGlobalService(typeof(DTE)) as DTE;
+            ide.ExecuteCommand("File.OpenFile", path);
+        }
+
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
@@ -59,7 +66,7 @@ namespace OpenFileFromDir
             var filteredListProvider = new FilteredListProvider(_fileListWorker.GetRootPath(), null);
             _fileListWorker.ProcessFiles((wfiles) => filteredListProvider.SetFiles(wfiles));
 
-            var wnd = new FileListWindow(filteredListProvider);
+            var wnd = new FileListWindow(filteredListProvider, this);
 
             DTE ide = Package.GetGlobalService(typeof(DTE)) as DTE;
             wnd.Owner = HwndSource.FromHwnd(new IntPtr(ide.MainWindow.HWnd)).RootVisual as System.Windows.Window;

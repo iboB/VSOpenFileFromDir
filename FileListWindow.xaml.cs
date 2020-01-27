@@ -11,8 +11,9 @@ namespace OpenFileFromDir
 {
     public partial class FileListWindow : Window
     {
-        public FileListWindow(FilteredListProvider filteredListProvider)
+        public FileListWindow(FilteredListProvider filteredListProvider, OpenFileFromDirPackage package)
         {
+            this.package = package;
             this.filteredListProvider = filteredListProvider;
 
             InitializeComponent();
@@ -30,7 +31,8 @@ namespace OpenFileFromDir
 
         private void OpenSelectedFile()
         {
-            Debug.WriteLine($"Selected {(listBox.SelectedItem as ListItem).FullPath}");
+            var path = (listBox.SelectedItem as ListItem).FullPath;
+            package.DoOpenFile(path);
         }
 
         private void OnFilterTextChanged(object sender, TextChangedEventArgs args)
@@ -97,6 +99,7 @@ namespace OpenFileFromDir
             }
         }
 
+        private OpenFileFromDirPackage package;
         private FilteredListProvider filteredListProvider;
     }
 }
