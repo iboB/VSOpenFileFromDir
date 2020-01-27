@@ -50,25 +50,22 @@ namespace OpenFileFromDir
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            //var worker = package.GetFileListWorker();
-            //if (worker == null)
-            //{
-            //    Debug.WriteLine("Missing worker");
-            //    return;
-            //}
+            if (_fileListWorker == null)
+            {
+                Debug.WriteLine("Missing worker");
+                return;
+            }
 
-            //var files = worker.GetFiles();
+            var filteredListProvider = new FilteredListProvider(_fileListWorker.GetRootPath(), null);
+            _fileListWorker.ProcessFiles((wfiles) => filteredListProvider.SetFiles(wfiles));
 
-            //foreach (var f in files)
-            //{
-            //    Debug.WriteLine($"AA : {f}");
-            //}
+            var wnd = new FileListWindow(filteredListProvider);
 
             DTE ide = Package.GetGlobalService(typeof(DTE)) as DTE;
-            var wnd = new FileListWindow();
             wnd.Owner = HwndSource.FromHwnd(new IntPtr(ide.MainWindow.HWnd)).RootVisual as System.Windows.Window;
             wnd.Width = wnd.Owner.Width / 3;
             wnd.Height = (2 * wnd.Owner.Height) / 3;
+
             wnd.ShowDialog();
         }
 
@@ -134,7 +131,6 @@ namespace OpenFileFromDir
         }
 
         FileListWorker _fileListWorker = null;
-        public FileListWorker GetFileListWorker() { return _fileListWorker; }
 
         #region unused events
         public void OnAfterCloseFolder(string folderPath) { }

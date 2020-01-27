@@ -1,17 +1,21 @@
 using System.IO;
 using System.Collections.Generic;
 
-namespace watcher
+namespace OpenFileFromDir
 {
-    class FilteredListProvider
+    public class FilteredListProvider
     {
         public FilteredListProvider(string rootPath, string[] recentFiles)
         {
             _rootPath = rootPath;
             _recentIndexes = new Dictionary<string, int>();
-            for (int i=0; i<recentFiles.Length; ++i)
+
+            if (recentFiles != null)
             {
-                _recentIndexes[recentFiles[i]] = i;
+                for (int i = 0; i < recentFiles.Length; ++i)
+                {
+                    _recentIndexes[recentFiles[i]] = i;
+                }
             }
         }
 

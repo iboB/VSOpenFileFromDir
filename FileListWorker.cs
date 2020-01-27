@@ -47,6 +47,7 @@ namespace OpenFileFromDir
             _thread.Start();
         }
 
+        public string GetRootPath() { return _rootPath; }
         public string[] GetFiles()
         {
             lock (_allFiles)

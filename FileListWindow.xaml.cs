@@ -7,20 +7,34 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace OpenFileFromDir
 {
-    public partial class FileListWindow : System.Windows.Window
+    public partial class FileListWindow : Window
     {
-        public FileListWindow()
+        public FileListWindow(FilteredListProvider filteredListProvider)
         {
+            this.filteredListProvider = filteredListProvider;
+
             InitializeComponent();
 
             filterTextBox.Text = "";
             filterTextBox.Focus();
+        }
+
+        private void filterTextChanged(object sender, TextChangedEventArgs args)
+        {
+            var filteredEntries = filteredListProvider.GetFilteredEntries(filterTextBox.Text);
+
+            listBox.Items.Clear();
+
+            foreach(var e in filteredEntries)
+            {
+                listBox.Items.Add(e.filename);
+            }
         }
         private void Window_KeyDown(object sender, KeyEventArgs args)
         {
 
         }
 
-        public IVsUIShell shell;
+        private FilteredListProvider filteredListProvider;
     }
 }
