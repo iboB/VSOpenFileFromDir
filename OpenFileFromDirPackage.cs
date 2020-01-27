@@ -6,6 +6,9 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio;
 using Task = System.Threading.Tasks.Task;
 using System.Diagnostics;
+using System.ComponentModel.Design;
+using EnvDTE;
+using System.Windows.Interop;
 
 namespace OpenFileFromDir
 {
@@ -18,19 +21,55 @@ namespace OpenFileFromDir
     {
         public const string PackageGuidString = "d9ceffa2-afa0-4207-8711-d43d74ad1ad8";
 
+        public const int CommandId = 0x0100;
+        public static readonly Guid CommandSet = new Guid("1a8aa90c-6004-47f6-9c1c-c4af614721a6");
+
         private IVsSolution _solution = null;
         private uint _solutionEventsToken = uint.MaxValue;
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-            await DoOpenFile.InitializeAsync(this);
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
+            OleMenuCommandService commandService = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
+            commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
+
+            var menuCommandID = new CommandID(CommandSet, CommandId);
+            var menuItem = new MenuCommand(this.ExecuteCommand, menuCommandID);
+            commandService.AddCommand(menuItem);
 
             HookSolutionEvents();
 
             // we will be initialized after the user opens a solution
             // so, invoke this here for the first one
             OnSolutionLoaded();
+        }
+
+        private void ExecuteCommand(object sender, EventArgs args)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            //var worker = package.GetFileListWorker();
+            //if (worker == null)
+            //{
+            //    Debug.WriteLine("Missing worker");
+            //    return;
+            //}
+
+            //var files = worker.GetFiles();
+
+            //foreach (var f in files)
+            //{
+            //    Debug.WriteLine($"AA : {f}");
+            //}
+
+            DTE ide = Package.GetGlobalService(typeof(DTE)) as DTE;
+            var wnd = new FileListWindow();
+            wnd.Owner = HwndSource.FromHwnd(new IntPtr(ide.MainWindow.HWnd)).RootVisual as System.Windows.Window;
+            wnd.Width = wnd.Owner.Width / 3;
+            wnd.Height = (2 * wnd.Owner.Height) / 3;
+            wnd.ShowDialog();
         }
 
         private void OnSolutionLoaded()
@@ -40,12 +79,16 @@ namespace OpenFileFromDir
             string dir, file, opts;
             _solution.GetSolutionInfo(out dir, out file, out opts);
 
-            Debug.WriteLine("OpenFileFromDirPackage opening {0}", dir);
+            _fileListWorker = new FileListWorker(dir);
         }
 
         private void OnSolutionUnloading()
         {
-            Debug.WriteLine("OpenFileFromDirPackage closing solution");
+            if (_fileListWorker != null)
+            {
+                _fileListWorker.Join();
+                _fileListWorker = null;
+            }
         }
 
         private void UnhookSolitionEvents()
@@ -89,6 +132,9 @@ namespace OpenFileFromDir
             OnSolutionUnloading();
             return VSConstants.S_OK;
         }
+
+        FileListWorker _fileListWorker = null;
+        public FileListWorker GetFileListWorker() { return _fileListWorker; }
 
         #region unused events
         public void OnAfterCloseFolder(string folderPath) { }

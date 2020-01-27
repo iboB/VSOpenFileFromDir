@@ -1,21 +1,25 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace watcher
+namespace OpenFileFromDir
 {
     using DirFilters = HashSet<string>;
-    class Worker
+
+    public class FileListWorker
     {
-        public Worker(string path)
+        public FileListWorker(string rootPath)
         {
-            if (!Directory.Exists(path)) throw new DirectoryNotFoundException(path);
-            _rootPath = path;
+            if (!Directory.Exists(rootPath)) throw new DirectoryNotFoundException(rootPath);
+            _rootPath = rootPath;
             _messageQueue = new BlockingCollection<Msg>();
             _allFiles = new List<string>();
+
+            _dirFilters = new DirFilters();
+            _dirFilters.Add(".git"); // by default ignore .git subdirectory
 
             // start the watchers before we start the thread and collect file infos
             // thus if any events happen while we're building the list, we'll have
@@ -194,7 +198,7 @@ namespace watcher
             dirFilters = null;
             try
             {
-                var fname = Path.Join(_rootPath, FiltersFilename);
+                var fname = Path.Combine(_rootPath, FiltersFilename);
                 if (!File.Exists(fname)) return;
 
                 var text = File.ReadAllText(fname);
