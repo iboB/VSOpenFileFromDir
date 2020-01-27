@@ -247,10 +247,8 @@ namespace OpenFileFromDir
         static DirFilters makeDefaultDirFilters()
         {
             var ret = new DirFilters();
-            // by default ignore some subdirectories by default
             ret.Add(".git");
             ret.Add(".vs");
-
             return ret;
         }
 

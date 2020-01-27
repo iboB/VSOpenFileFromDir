@@ -70,7 +70,7 @@ namespace OpenFileFromDir
 
             DTE ide = Package.GetGlobalService(typeof(DTE)) as DTE;
             wnd.Owner = HwndSource.FromHwnd(new IntPtr(ide.MainWindow.HWnd)).RootVisual as System.Windows.Window;
-            wnd.Width = wnd.Owner.Width / 3;
+            wnd.Width = wnd.Owner.Width / 2;
             wnd.Height = (2 * wnd.Owner.Height) / 3;
 
             wnd.ShowDialog();
