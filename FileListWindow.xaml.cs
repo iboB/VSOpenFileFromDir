@@ -19,7 +19,7 @@ namespace OpenFileFromDir
             filterTextBox.Focus();
         }
 
-        private void filterTextChanged(object sender, TextChangedEventArgs args)
+        private void OnFilterTextChanged(object sender, TextChangedEventArgs args)
         {
             var filteredEntries = filteredListProvider.GetFilteredEntries(filterTextBox.Text);
 
@@ -30,7 +30,7 @@ namespace OpenFileFromDir
                 listBox.Items.Add(e.filename);
             }
         }
-        private void Window_KeyDown(object sender, KeyEventArgs args)
+        private void OnWindowKeyDown(object sender, KeyEventArgs args)
         {
 
         }
