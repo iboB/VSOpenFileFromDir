@@ -76,6 +76,8 @@ namespace OpenFileFromDir
             string dir, file, opts;
             _solution.GetSolutionInfo(out dir, out file, out opts);
 
+            Debug.WriteLine($"OpenFileFromDir stars working on {dir}");
+
             _fileListWorker = new FileListWorker(dir);
         }
 

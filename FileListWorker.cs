@@ -14,6 +14,8 @@ namespace OpenFileFromDir
         public FileListWorker(string rootPath)
         {
             if (!Directory.Exists(rootPath)) throw new DirectoryNotFoundException(rootPath);
+            // normalize path. we don't want trailing directory separators
+            if (rootPath.EndsWith("\\") || rootPath.EndsWith("/")) rootPath = rootPath.Remove(rootPath.Length - 1);
             _rootPath = rootPath;
             _messageQueue = new BlockingCollection<Msg>();
             _allFiles = new List<string>();

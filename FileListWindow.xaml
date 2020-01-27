@@ -9,7 +9,7 @@
 			<RowDefinition Height="auto"/>
 			<RowDefinition Height="auto"/>
 		</Grid.RowDefinitions>
-		<TextBox Name="filterTextBox" TextChanged="OnFilterTextChanged"/>
+		<TextBox Name="filterTextBox" TextChanged="OnFilterTextChanged" PreviewKeyDown="OnFilterKeyDown"/>
 		<Grid Grid.Row="1">
 			<ListBox Name="listBox"/>
 		</Grid>
