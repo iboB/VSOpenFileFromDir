@@ -30,6 +30,8 @@ The extension tries to read `VSOpenFileFromDirFilters.json` from the root direct
 
 These filters will ignore all files which are in subdirectories `.git`, `.vs`, `out`, `bin`, and `obj`. And all files with extensions `.zip` and `.tar`
 
+There is also an example configuration file in this repository which his suitable for .NET projects
+
 ## Default configuration
 
 If there is no configuration file provided, the ignored directories are `.git` and `.vs`, and the ignored files are `*.sln`
