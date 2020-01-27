@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Windows;
+using System.IO;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -20,9 +21,16 @@ namespace OpenFileFromDir
             filterTextBox.Focus();
         }
 
+        public class ListItem
+        {
+            public string Filename { get; set; }
+            public string RelPath { get; set; }
+            public string FullPath { get; set; }
+        }
+
         private void OpenSelectedFile()
         {
-            Debug.WriteLine($"Selected {listBox.SelectedItem}");
+            Debug.WriteLine($"Selected {(listBox.SelectedItem as ListItem).FullPath}");
         }
 
         private void OnFilterTextChanged(object sender, TextChangedEventArgs args)
@@ -33,9 +41,11 @@ namespace OpenFileFromDir
 
             if (filteredEntries.Count > 0)
             {
+                var rootLen = filteredListProvider.GetRootPath().Length;
                 foreach (var e in filteredEntries)
                 {
-                    listBox.Items.Add(e.filename);
+                    var relPath = Path.GetDirectoryName(e.fullPath.Substring(rootLen + 1));
+                    listBox.Items.Add(new ListItem() { Filename = e.filename, RelPath = relPath, FullPath = e.fullPath });
                 }
                 listBox.SelectedIndex = 0;
             }
@@ -78,6 +88,7 @@ namespace OpenFileFromDir
             {
                 args.Handled = true;
                 OpenSelectedFile();
+                Close();
             }
             else if (args.Key == Key.Escape)
             {

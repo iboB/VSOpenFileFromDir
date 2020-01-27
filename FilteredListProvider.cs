@@ -19,6 +19,8 @@ namespace OpenFileFromDir
             }
         }
 
+        public string GetRootPath() { return _rootPath; }
+
         public void SetFiles(List<string> files)
         {
             _entries = new Entry[files.Count];

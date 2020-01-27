@@ -10,8 +10,19 @@
 			<RowDefinition Height="auto"/>
 		</Grid.RowDefinitions>
 		<TextBox Name="filterTextBox" TextChanged="OnFilterTextChanged" PreviewKeyDown="OnFilterKeyDown"/>
-		<Grid Grid.Row="1">
-			<ListBox Name="listBox"/>
-		</Grid>
+		<ListBox Grid.Row="1" Name="listBox">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="250" />
+							<ColumnDefinition Width="*" />
+						</Grid.ColumnDefinitions>
+						<TextBlock Text="{Binding Filename}"/>
+						<TextBlock Grid.Column="1" Text="{Binding RelPath}"/>
+					</Grid>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
 	</Grid>
 </Window>
