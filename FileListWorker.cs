@@ -4,10 +4,12 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace OpenFileFromDir
 {
     using DirFilters = HashSet<string>;
+    using FileFilters = List<Regex>;
 
     public class FileListWorker
     {
@@ -19,9 +21,6 @@ namespace OpenFileFromDir
             _rootPath = rootPath;
             _messageQueue = new BlockingCollection<Msg>();
             _allFiles = new List<string>();
-
-            _dirFilters = new DirFilters();
-            _dirFilters.Add(".git"); // by default ignore .git subdirectory
 
             // start the watchers before we start the thread and collect file infos
             // thus if any events happen while we're building the list, we'll have
@@ -151,7 +150,16 @@ namespace OpenFileFromDir
         private bool FilePassesFilter(string file)
         {
             var dir = Path.GetDirectoryName(file);
-            return DirPassesFilter(dir);
+            if (!DirPassesFilter(dir)) return false;
+
+            if (_fileFilters == null) return true;
+
+            var fname = Path.GetFileName(file);
+            foreach (var filter in _fileFilters)
+            {
+                if (filter.IsMatch(fname)) return false;
+            }
+            return true;
         }
 
         void BuildTree(string path)
@@ -196,9 +204,10 @@ namespace OpenFileFromDir
             BuildTree(_rootPath);
         }
 
-        void ReadFilters(out DirFilters dirFilters)
+        void ReadFilters(out DirFilters dirFilters, out FileFilters fileFilters)
         {
-            dirFilters = null;
+            dirFilters = makeDefaultDirFilters();
+            fileFilters = makeDefaultFileFilters();
             try
             {
                 var fname = Path.Combine(_rootPath, FiltersFilename);
@@ -218,6 +227,16 @@ namespace OpenFileFromDir
                             dirFilters.Add(d.GetString());
                         }
                     }
+                    JsonElement files;
+                    if (root.TryGetProperty("files", out files))
+                    {
+                        var efiles = files.EnumerateArray();
+                        fileFilters = new FileFilters();
+                        foreach(var f in efiles)
+                        {
+                            fileFilters.Add(makeFileFilter(f.GetString()));
+                        }
+                    }
                 }
             }
             catch
@@ -225,10 +244,34 @@ namespace OpenFileFromDir
             }
         }
 
+        static DirFilters makeDefaultDirFilters()
+        {
+            var ret = new DirFilters();
+            // by default ignore some subdirectories by default
+            ret.Add(".git");
+            ret.Add(".vs");
+
+            return ret;
+        }
+
+        static Regex makeFileFilter(string wildcardMask)
+        {
+            // hacky
+            return new Regex(wildcardMask.Replace(".", "[.]").Replace("*", ".*").Replace("?", "."), RegexOptions.IgnoreCase);
+        }
+
+        static FileFilters makeDefaultFileFilters()
+        {
+            var ret = new FileFilters();
+            ret.Add(makeFileFilter("*.sln"));
+            return ret;
+        }
+
         void OnFiltersChanged()
         {
             DirFilters newDirFilters;
-            ReadFilters(out newDirFilters);
+            FileFilters newFileFilters;
+            ReadFilters(out newDirFilters, out newFileFilters);
 
             bool haveNewFilters = false;
             if (newDirFilters == null)
@@ -259,7 +302,9 @@ namespace OpenFileFromDir
 
         private void Run()
         {
-            ReadFilters(out _dirFilters);
+            DirFilters df;
+            FileFilters ff;
+            ReadFilters(out _dirFilters, out _fileFilters);
             BuildFullTree();
 
             while (true)
@@ -448,6 +493,7 @@ namespace OpenFileFromDir
         private const string FiltersFilename = "VSOpenFileFromDirFilters.json";
         readonly private string _rootPath;
         private DirFilters _dirFilters = null;
+        private FileFilters _fileFilters = null;
         private Thread _thread;
         private List<string> _allFiles;
         private BlockingCollection<Msg> _messageQueue;
