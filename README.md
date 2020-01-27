@@ -1,6 +1,6 @@
 # VSOpenFileFromDir
 
-A plugin for Visual Studio which allows to quickly open a file from a directory (typically the solution root directory).
+A plugin for Visual Studio which allows to quickly open a file from a directory (typically the solution root directory) by applying a filter.
 
 It works much like Visual Studio Code's Ctrl-P quick open functionality.
 
@@ -43,6 +43,7 @@ If there is no configuration file provided, the ignored directories are `.git` a
 These features are planned for the near future:
 
 * Match Visual Studio's current style
+* Display recent files
 * Display matched characters
 * Have icons for files based on extension
 
