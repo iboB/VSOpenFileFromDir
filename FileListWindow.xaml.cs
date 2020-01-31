@@ -102,6 +102,8 @@ namespace OpenFileFromDir
 
             filterTextBox.Text = "";
             filterTextBox.Focus();
+
+            UpdateListBox("");
         }
 
         public class ListItem
@@ -158,9 +160,9 @@ namespace OpenFileFromDir
             package.DoOpenFile(path);
         }
 
-        private void OnFilterTextChanged(object sender, TextChangedEventArgs args)
+        void UpdateListBox(string filter)
         {
-            var filteredEntries = filteredListProvider.GetFilteredEntries(filterTextBox.Text);
+            var filteredEntries = filteredListProvider.GetFilteredEntries(filter);
 
             listBox.Items.Clear();
 
@@ -173,6 +175,11 @@ namespace OpenFileFromDir
                 }
                 listBox.SelectedIndex = 0;
             }
+        }
+
+        private void OnFilterTextChanged(object sender, TextChangedEventArgs args)
+        {
+            UpdateListBox(filterTextBox.Text);
         }
 
         private void OnFilterKeyDown(object sender, KeyEventArgs args)

@@ -79,7 +79,7 @@ namespace OpenFileFromDir
                 _recentFiles = new List<string>();
             }
 
-            var filteredListProvider = new FilteredListProvider(_fileListWorker.GetRootPath(), _recentFiles.ToArray());
+            var filteredListProvider = new FilteredListProvider(_fileListWorker.GetRootPath(), _recentFiles);
             _fileListWorker.ProcessFiles((wfiles) => filteredListProvider.SetFiles(wfiles));
 
             var imageService = Package.GetGlobalService(typeof(SVsImageService)) as IVsImageService2;

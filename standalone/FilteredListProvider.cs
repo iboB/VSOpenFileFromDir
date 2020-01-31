@@ -5,17 +5,18 @@ namespace OpenFileFromDir
 {
     public class FilteredListProvider
     {
-        public FilteredListProvider(string rootPath, string[] recentFiles)
+        public FilteredListProvider(string rootPath, List<string> recentFiles)
         {
             _rootPath = rootPath;
             _recentIndexes = new Dictionary<string, int>();
 
             if (recentFiles != null)
             {
-                for (int i = 0; i < recentFiles.Length; ++i)
+                for (int i = 0; i < recentFiles.Count; ++i)
                 {
                     _recentIndexes[recentFiles[i]] = i;
                 }
+                _recentFiles = recentFiles;
             }
         }
 
@@ -48,7 +49,20 @@ namespace OpenFileFromDir
 
             if (filter.Length == 0)
             {
-                // when we have no filter we just return all recent entries
+                if (_recentFiles != null)
+                {
+                    for (int i=_recentFiles.Count-1; i>=0; --i)
+                    {
+                        var path = _recentFiles[i];
+                        FilteredEntry fe;
+                        fe.fullPath = path;
+                        fe.filename = Path.GetFileName(path);
+                        fe.matchPositions = new List<int>();
+                        fe.matchType = FilteredEntry.MatchType.Recent;
+                        fe.sortWeight = 0;
+                        ret.Add(fe);
+                    }
+                }
                 return ret;
             }
 
@@ -177,5 +191,6 @@ namespace OpenFileFromDir
         readonly string _rootPath;
         string[] _entries = null;
         Dictionary<string, int> _recentIndexes; // maps a recently used file to its recentness (index in the input array)
+        List<string> _recentFiles;
     }
 }
