@@ -23,13 +23,7 @@ namespace OpenFileFromDir
 
         public void SetFiles(List<string> files)
         {
-            _entries = new Entry[files.Count];
-            for (int i = 0; i < files.Count; ++i)
-            {
-                var file = files[i];
-                _entries[i].fullPath = file;
-                _entries[i].filename = Path.GetFileName(file);
-            }
+            _entries = files.ToArray();
         }
 
         public struct FilteredEntry
@@ -63,14 +57,14 @@ namespace OpenFileFromDir
             // first find all entries which match
             foreach (var e in _entries)
             {
-                var relativePath = e.fullPath.Substring(_rootPath.Length + 1);
+                var relativePath = e.Substring(_rootPath.Length + 1);
                 var positions = new List<int>();
 
                 if (Match(relativePath, filter, positions))
                 {
                     FilteredEntry fe;
-                    fe.fullPath = e.fullPath;
-                    fe.filename = e.filename;
+                    fe.fullPath = e;
+                    fe.filename = Path.GetFileName(e);
                     fe.matchPositions = positions;
 
                     // sort weight
@@ -78,7 +72,7 @@ namespace OpenFileFromDir
                     // BUT if a character is part of the filename it gets an even lower weight
                     // so weights before the filename are artificially extended
                     int sortWeight = 0;
-                    int filenameStart = relativePath.Length - e.filename.Length;
+                    int filenameStart = relativePath.Length - fe.filename.Length;
                     foreach (var index in positions)
                     {
                         if (index >= filenameStart)
@@ -184,7 +178,7 @@ namespace OpenFileFromDir
         }
 
         readonly string _rootPath;
-        Entry[] _entries = null;
+        string[] _entries = null;
         Dictionary<string, int> _recentIndexes; // maps a recently used file to its recentness (index in the input array)
     }
 }
