@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="OpenFileFromDir.b932be75-1562-46e4-b95c-ea0373b1797f" Version="1.0" Language="en-US" Publisher="Borislav Stanimirov" />
+        <Identity Id="OpenFileFromDir.b932be75-1562-46e4-b95c-ea0373b1797f" Version="1.1.0.0" Language="en-US" Publisher="Borislav Stanimirov" />
         <DisplayName>Open File From Directory</DisplayName>
         <Description xml:space="preserve">Opens a list of files in the current directory and allows filtering and quick open in the style of Visual Studio Code's Ctrl-P</Description>
         <License>LICENSE</License>
