@@ -4,11 +4,91 @@ using System.IO;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Documents;
 using Microsoft.Internal.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace OpenFileFromDir
 {
+    namespace WPFHelpers
+    {
+        class FormattedTextHelper
+        {
+            public static string GetFormattedText(DependencyObject obj)
+            {
+                return obj.GetValue(FormattedTextProperty) as string;
+            }
+
+            public static void SetFormattedText(DependencyObject obj, string val)
+            {
+                obj.SetValue(FormattedTextProperty, val);
+            }
+
+            public static readonly DependencyProperty FormattedTextProperty =
+                DependencyProperty.RegisterAttached("FormattedText", typeof(string), typeof(FormattedTextHelper),
+                    new UIPropertyMetadata("", FormattedTextChanged));
+
+            private static void FormattedTextChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+            {
+                var value = args.NewValue as string;
+                var textBlock = obj as TextBlock;
+
+                if (textBlock != null)
+                {
+                    textBlock.Inlines.Clear();
+
+                    bool bold = false;
+                    string cur = "";
+                    for (int i=0; i<value.Length; ++i)
+                    {
+                        if (value[i] == '!')
+                        {
+                            if (!bold)
+                            {
+                                // staring bold
+                                if (cur.Length != 0)
+                                {
+                                    textBlock.Inlines.Add(cur);
+                                    cur = "";
+                                }
+                                bold = true;
+                            }
+                            ++i;
+                        }
+                        else
+                        {
+                            if (bold)
+                            {
+                                // stopping bold
+                                if (cur.Length != 0)
+                                {
+                                    textBlock.Inlines.Add(new Bold(new Run(cur)));
+                                    cur = "";
+                                }
+                                bold = false;
+                            }
+                        }
+
+                        cur += value[i];
+                    }
+
+                    // add final
+                    if (cur.Length != 0)
+                    {
+                        if (bold)
+                        {
+                            textBlock.Inlines.Add(new Bold(new Run(cur)));
+                        }
+                        else
+                        {
+                            textBlock.Inlines.Add(cur);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public partial class FileListWindow : Window
     {
         public FileListWindow(FilteredListProvider filteredListProvider, OpenFileFromDirPackage package)
@@ -24,6 +104,40 @@ namespace OpenFileFromDir
 
         public class ListItem
         {
+            public ListItem(int rootLen, FilteredListProvider.FilteredEntry e)
+            {
+                var formattedRel = Path.GetDirectoryName(e.fullPath.Substring(rootLen + 1)) + Path.DirectorySeparatorChar;
+                string formattedFilename = e.filename;
+                if (e.matchType == FilteredListProvider.FilteredEntry.MatchType.FileOnly)
+                {
+                    for (int i = e.matchPositions.Count-1; i >= 0; --i)
+                    {
+                        var pos = e.matchPositions[i];
+                        formattedFilename = formattedFilename.Insert(pos, "!");
+                    }
+                }
+                else
+                {
+                    for (int i = e.matchPositions.Count - 1; i >= 0; --i)
+                    {
+                        var pos = e.matchPositions[i];
+                        if (pos >= formattedRel.Length)
+                        {
+                            pos -= formattedRel.Length;
+                            formattedFilename = formattedFilename.Insert(pos, "!");
+                        }
+                        else
+                        {
+                            formattedRel = formattedRel.Insert(pos, "!");
+                        }
+                    }
+                }
+
+                Filename = formattedFilename;
+                RelPath = formattedRel;
+                FullPath = e.fullPath;
+            }
+
             public string Filename { get; set; }
             public string RelPath { get; set; }
             public string FullPath { get; set; }
@@ -46,8 +160,7 @@ namespace OpenFileFromDir
                 var rootLen = filteredListProvider.GetRootPath().Length;
                 foreach (var e in filteredEntries)
                 {
-                    var relPath = Path.GetDirectoryName(e.fullPath.Substring(rootLen + 1));
-                    listBox.Items.Add(new ListItem() { Filename = e.filename, RelPath = relPath, FullPath = e.fullPath });
+                    listBox.Items.Add(new ListItem(rootLen, e));
                 }
                 listBox.SelectedIndex = 0;
             }

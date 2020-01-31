@@ -50,14 +50,14 @@
 		<TextBox Name="filterTextBox" TextChanged="OnFilterTextChanged" PreviewKeyDown="OnFilterKeyDown"/>
 		<ListBox Grid.Row="1" Name="listBox">
 			<ListBox.ItemTemplate>
-				<DataTemplate>
+				<DataTemplate xmlns:u="clr-namespace:OpenFileFromDir.WPFHelpers">
 					<Grid>
 						<Grid.ColumnDefinitions>
 							<ColumnDefinition Width="250" />
 							<ColumnDefinition Width="*" />
 						</Grid.ColumnDefinitions>
-						<TextBlock Text="{Binding Filename}"/>
-						<TextBlock Grid.Column="1" Text="{Binding RelPath}"/>
+                        <TextBlock u:FormattedTextHelper.FormattedText="{Binding Filename}" />
+                        <TextBlock Grid.Column="1" u:FormattedTextHelper.FormattedText="{Binding RelPath}" />
 					</Grid>
 				</DataTemplate>
 			</ListBox.ItemTemplate>
