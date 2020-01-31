@@ -82,7 +82,9 @@ namespace OpenFileFromDir
             var filteredListProvider = new FilteredListProvider(_fileListWorker.GetRootPath(), _recentFiles.ToArray());
             _fileListWorker.ProcessFiles((wfiles) => filteredListProvider.SetFiles(wfiles));
 
-            var wnd = new FileListWindow(filteredListProvider, this);
+            var imageService = Package.GetGlobalService(typeof(SVsImageService)) as IVsImageService2;
+
+            var wnd = new FileListWindow(filteredListProvider, this, imageService);
 
             DTE ide = Package.GetGlobalService(typeof(DTE)) as DTE;
             wnd.Owner = HwndSource.FromHwnd(new IntPtr(ide.MainWindow.HWnd)).RootVisual as System.Windows.Window;

@@ -50,16 +50,21 @@
 		<TextBox Name="filterTextBox" TextChanged="OnFilterTextChanged" PreviewKeyDown="OnFilterKeyDown"/>
 		<ListBox Grid.Row="1" Name="listBox">
 			<ListBox.ItemTemplate>
-				<DataTemplate xmlns:u="clr-namespace:OpenFileFromDir.WPFHelpers">
+				<DataTemplate
+                    xmlns:u="clr-namespace:OpenFileFromDir.WPFHelpers"
+                    xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+                    >
 					<Grid>
 						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="250" />
+                            <ColumnDefinition Width="22" />
+                            <ColumnDefinition Width="250" />
 							<ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock u:FormattedTextHelper.FormattedText="{Binding Filename}" />
-                        <TextBlock Grid.Column="1" u:FormattedTextHelper.FormattedText="{Binding RelPath}" />
-                        <TextBlock Grid.Column="2" Text="{Binding Recent}" />
+                        <imaging:CrispImage Width="16" Height="16" Moniker="{Binding Icon}" />
+                        <TextBlock Grid.Column="1" u:FormattedTextHelper.FormattedText="{Binding Filename}" />
+                        <TextBlock Grid.Column="2" u:FormattedTextHelper.FormattedText="{Binding RelPath}" />
+                        <TextBlock Grid.Column="3" Text="{Binding Recent}" />
                     </Grid>
 				</DataTemplate>
 			</ListBox.ItemTemplate>

@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Documents;
 using Microsoft.Internal.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Imaging.Interop;
 
 namespace OpenFileFromDir
 {
@@ -91,10 +92,11 @@ namespace OpenFileFromDir
 
     public partial class FileListWindow : Window
     {
-        public FileListWindow(FilteredListProvider filteredListProvider, OpenFileFromDirPackage package)
+        public FileListWindow(FilteredListProvider filteredListProvider, OpenFileFromDirPackage package, IVsImageService2 imageService)
         {
             this.package = package;
             this.filteredListProvider = filteredListProvider;
+            this.imageService = imageService;
 
             InitializeComponent();
 
@@ -104,7 +106,7 @@ namespace OpenFileFromDir
 
         public class ListItem
         {
-            public ListItem(int rootLen, FilteredListProvider.FilteredEntry e)
+            public ListItem(int rootLen, FilteredListProvider.FilteredEntry e, ImageMoniker icon)
             {
                 var formattedRel = Path.GetDirectoryName(e.fullPath.Substring(rootLen + 1)) + Path.DirectorySeparatorChar;
                 string formattedFilename = e.filename;
@@ -138,12 +140,16 @@ namespace OpenFileFromDir
                 FullPath = e.fullPath;
 
                 Recent = e.matchType == FilteredListProvider.FilteredEntry.MatchType.Recent ? "Recent" : "";
+
+                Icon = icon;
             }
 
             public string Filename { get; set; }
             public string RelPath { get; set; }
             public string FullPath { get; set; }
             public string Recent { get; set; }
+
+            public ImageMoniker Icon { get; set; }
         }
 
         private void OpenSelectedFile()
@@ -163,7 +169,7 @@ namespace OpenFileFromDir
                 var rootLen = filteredListProvider.GetRootPath().Length;
                 foreach (var e in filteredEntries)
                 {
-                    listBox.Items.Add(new ListItem(rootLen, e));
+                    listBox.Items.Add(new ListItem(rootLen, e, imageService.GetImageMonikerForFile(e.filename)));
                 }
                 listBox.SelectedIndex = 0;
             }
@@ -217,5 +223,6 @@ namespace OpenFileFromDir
 
         private OpenFileFromDirPackage package;
         private FilteredListProvider filteredListProvider;
+        private IVsImageService2 imageService;
     }
 }
