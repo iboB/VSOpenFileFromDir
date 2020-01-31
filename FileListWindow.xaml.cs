@@ -108,7 +108,7 @@ namespace OpenFileFromDir
             {
                 var formattedRel = Path.GetDirectoryName(e.fullPath.Substring(rootLen + 1)) + Path.DirectorySeparatorChar;
                 string formattedFilename = e.filename;
-                if (e.matchType == FilteredListProvider.FilteredEntry.MatchType.FileOnly)
+                if (e.matchType == FilteredListProvider.FilteredEntry.MatchType.FileOnly || e.matchType == FilteredListProvider.FilteredEntry.MatchType.Recent)
                 {
                     for (int i = e.matchPositions.Count-1; i >= 0; --i)
                     {
@@ -136,11 +136,14 @@ namespace OpenFileFromDir
                 Filename = formattedFilename;
                 RelPath = formattedRel;
                 FullPath = e.fullPath;
+
+                Recent = e.matchType == FilteredListProvider.FilteredEntry.MatchType.Recent ? "Recent" : "";
             }
 
             public string Filename { get; set; }
             public string RelPath { get; set; }
             public string FullPath { get; set; }
+            public string Recent { get; set; }
         }
 
         private void OpenSelectedFile()

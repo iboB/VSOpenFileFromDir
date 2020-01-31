@@ -139,11 +139,6 @@ namespace OpenFileFromDir
             return ret;
         }
 
-        private struct Entry
-        {
-            public string fullPath; // full path to file
-            public string filename; // file name only
-        }
         static bool Match(string str, string filter, List<int> positions)
         {
             positions.Clear();

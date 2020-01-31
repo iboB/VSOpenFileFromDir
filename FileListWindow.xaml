@@ -8,7 +8,7 @@
         <Style TargetType="{x:Type ListBoxItem}">
             <!-- Overriding the default values for listbox items so that the mouse hove doesn't highlight-->
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
             <Setter Property="Padding" Value="2,0,0,0"/>
             <Setter Property="Template">
@@ -55,10 +55,12 @@
 						<Grid.ColumnDefinitions>
 							<ColumnDefinition Width="250" />
 							<ColumnDefinition Width="*" />
-						</Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
                         <TextBlock u:FormattedTextHelper.FormattedText="{Binding Filename}" />
                         <TextBlock Grid.Column="1" u:FormattedTextHelper.FormattedText="{Binding RelPath}" />
-					</Grid>
+                        <TextBlock Grid.Column="2" Text="{Binding Recent}" />
+                    </Grid>
 				</DataTemplate>
 			</ListBox.ItemTemplate>
 		</ListBox>

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.ComponentModel.Design;
 using EnvDTE;
 using System.Windows.Interop;
+using System.Collections.Generic;
 
 namespace OpenFileFromDir
 {
@@ -32,6 +33,13 @@ namespace OpenFileFromDir
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var ide = Package.GetGlobalService(typeof(DTE)) as DTE;
             ide.ExecuteCommand("File.OpenFile", path);
+
+            // update recent files
+            while (_recentFiles.Count > 20) // TODO: add this 20 to config
+            {
+                _recentFiles.RemoveAt(0);
+            }
+            if (!_recentFiles.Contains(path)) _recentFiles.Add(path);
         }
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
@@ -63,7 +71,15 @@ namespace OpenFileFromDir
                 return;
             }
 
-            var filteredListProvider = new FilteredListProvider(_fileListWorker.GetRootPath(), null);
+            if (_recentFiles == null)
+            {
+                // TODO: populate from visual studio recent files
+                // also a hidden project called Miscellaneous Files has a list of candidates
+                // for now though only have our files as recents
+                _recentFiles = new List<string>();
+            }
+
+            var filteredListProvider = new FilteredListProvider(_fileListWorker.GetRootPath(), _recentFiles.ToArray());
             _fileListWorker.ProcessFiles((wfiles) => filteredListProvider.SetFiles(wfiles));
 
             var wnd = new FileListWindow(filteredListProvider, this);
@@ -140,6 +156,7 @@ namespace OpenFileFromDir
         }
 
         FileListWorker _fileListWorker = null;
+        List<String> _recentFiles = null;
 
         #region unused events
         public void OnAfterCloseFolder(string folderPath) { }
