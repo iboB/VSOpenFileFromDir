@@ -45,9 +45,6 @@ If there is no configuration file provided, the ignored directories are `.git` a
 These features are planned for the near future:
 
 * Match Visual Studio's current style
-* Display recent files
-* Display matched characters
-* Have icons for files based on extension
 
 ## License
 
