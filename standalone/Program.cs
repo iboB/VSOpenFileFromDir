@@ -11,7 +11,7 @@ namespace OpenFileFromDir
             try
             {
                 var root = @"/home/ibob/prj/yama";
-                string[] recent = { @"/home/ibob/prj/yama/test/unit/vector2.cpp", @"/home/ibob/prj/yama/test/unit/vector3.cpp", @"/home/ibob/prj/yama/test/unit/quaternion.cpp" };
+                var recent = new List<string>() { @"/home/ibob/prj/yama/test/unit/vector2.cpp", @"/home/ibob/prj/yama/test/unit/vector3.cpp", @"/home/ibob/prj/yama/test/unit/quaternion.cpp" };
                 var w = new FileListWorker(root);
                 FilteredListProvider f = null;
 
