@@ -271,29 +271,33 @@ namespace OpenFileFromDir
             FileFilters newFileFilters;
             ReadFilters(out newDirFilters, out newFileFilters);
 
-            bool haveNewFilters = false;
+            bool haveNewDirFilters = false;
             if (newDirFilters == null)
             {
-                haveNewFilters = _dirFilters != null;
+                haveNewDirFilters = _dirFilters != null;
             }
             else
             {
                 if (_dirFilters != null)
                 {
-                    haveNewFilters = !_dirFilters.SetEquals(newDirFilters);
+                    haveNewDirFilters = !_dirFilters.SetEquals(newDirFilters);
                 }
                 else
                 {
-                    haveNewFilters = true;
+                    haveNewDirFilters = true;
                 }
             }
 
-            if (haveNewFilters)
+            // TODO: use sequenceEquals to check more thoroughly
+            bool haveNewFileFileters = newFileFilters != _fileFilters;
+
+            if (haveNewDirFilters || haveNewFileFileters)
             {
                 // so, there is probably a way to update the existing list based on the old and new
                 // filters, but it's just too much work with too many potential bugs
                 // we rely that this happens relatively rarely, so we just rebuild the entire tree
                 _dirFilters = newDirFilters;
+                _fileFilters = newFileFilters;
                 BuildFullTree();
             }
         }
