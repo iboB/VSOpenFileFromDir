@@ -155,6 +155,8 @@ namespace OpenFileFromDir
 
                 var cflt = filter[iflt];
 
+                if (char.IsWhiteSpace(cflt)) continue; // ignore spaces
+
                 // the filter comes from the user
                 // it can contain forward slashes which we want to match with backcslashes
                 // here we "lie" that each forward slash is a backward slash
