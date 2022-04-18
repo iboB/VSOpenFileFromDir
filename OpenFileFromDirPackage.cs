@@ -87,7 +87,7 @@ namespace OpenFileFromDir
             var wnd = new FileListWindow(filteredListProvider, this, imageService);
 
             DTE ide = Package.GetGlobalService(typeof(DTE)) as DTE;
-            wnd.Owner = HwndSource.FromHwnd(new IntPtr(ide.MainWindow.HWnd)).RootVisual as System.Windows.Window;
+            wnd.Owner = HwndSource.FromHwnd(ide.MainWindow.HWnd).RootVisual as System.Windows.Window;
             wnd.Width = wnd.Owner.Width / 2;
             wnd.Height = (2 * wnd.Owner.Height) / 3;
 
